@@ -134,9 +134,23 @@ export namespace Plugin {
     Bus.subscribeAll(async (input) => {
       const hooks = await state().then((x) => x.hooks)
       for (const hook of hooks) {
-        hook["event"]?.({
-          event: input,
-        })
+        if (typeof hook["event"] !== "function") continue
+        try {
+          const result = hook["event"]({ event: input })
+          if (result && typeof (result as any).catch === "function") {
+            ;(result as any).catch((err: any) => {
+              log.error("plugin event hook error", {
+                type: input.type,
+                error: err instanceof Error ? err.message : String(err),
+              })
+            })
+          }
+        } catch (err: any) {
+          log.error("plugin event hook error", {
+            type: input.type,
+            error: err instanceof Error ? err.message : String(err),
+          })
+        }
       }
     })
   }
