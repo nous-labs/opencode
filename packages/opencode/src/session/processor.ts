@@ -8,6 +8,7 @@ import { SessionSummary } from "./summary"
 import { Bus } from "@/bus"
 import { SessionRetry } from "./retry"
 import { SessionStatus } from "./status"
+import { SessionRatelimit } from "./ratelimit"
 import { Plugin } from "@/plugin"
 import type { Provider } from "@/provider/provider"
 import { LLM } from "./llm"
@@ -282,6 +283,12 @@ export namespace SessionProcessor {
                   if (await SessionCompaction.isOverflow({ tokens: usage.tokens, model: input.model })) {
                     needsCompaction = true
                   }
+                  SessionRatelimit.emit({
+                    sessionID: input.sessionID,
+                    providerID: input.model.providerID,
+                    modelID: input.model.id,
+                    headers: value.response?.headers,
+                  })
                   break
 
                 case "text-start":
