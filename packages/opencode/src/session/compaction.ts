@@ -145,7 +145,7 @@ export namespace SessionCompaction {
     // Allow plugins to inject context or replace compaction prompt
     const compacting = await Plugin.trigger(
       "experimental.session.compacting",
-      { sessionID: input.sessionID },
+      { sessionID: input.sessionID, auto: input.auto },
       { context: [], prompt: undefined },
     )
     const minimalPrompt = `Summarize this conversation in 2-3 sentences. Focus only on: (1) what was done, (2) what files were modified, (3) what's next. Be concise.`
@@ -155,24 +155,21 @@ The summary that you construct will be used so that another agent can read it an
 ---
 ## Goal
 [What goal(s) is the user trying to accomplish?]
-
-## Instructions
 - [What important instructions did the user give you that are relevant]
 - [If there is a plan or spec, include information about it so next agent can continue using it]
 ## Discoveries
-
 [What notable things were learned during this conversation that would be useful for the next agent to know when continuing the work]
 
 ## Accomplished
 
 [What work has been completed, what work is still in progress, and what work is left?]
-
 ## Relevant files / directories
 [Construct a structured list of relevant files that have been read, edited, or created that pertain to the task at hand. If all the files in a directory are relevant, include the path to the directory.]
 ---`
-    const defaultPrompt = input.auto ? minimalPrompt : detailedPrompt
-
-    const promptText = compacting.prompt ?? [defaultPrompt, ...compacting.context].join("\n\n")
+    // Auto compactions use minimal prompt only - full context saved to brain DB by plugin hooks
+    const promptText = input.auto
+      ? compacting.prompt ?? minimalPrompt
+      : compacting.prompt ?? [detailedPrompt, ...compacting.context].join("\n\n")
     const result = await processor.process({
       user: userMessage,
       agent,
