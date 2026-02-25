@@ -606,6 +606,28 @@ export type EventSessionIdle = {
   }
 }
 
+export type EventProviderRatelimit = {
+  type: "provider.ratelimit"
+  properties: {
+    sessionID: string
+    providerID: string
+    modelID: string
+    requests: {
+      remaining?: number
+      limit?: number
+      reset?: string
+    }
+    tokens: {
+      remaining?: number
+      limit?: number
+      reset?: string
+    }
+    raw: {
+      [key: string]: string
+    }
+  }
+}
+
 export type QuestionOption = {
   /**
    * Display text (1-5 words, concise)
@@ -960,6 +982,7 @@ export type Event =
   | EventPermissionReplied
   | EventSessionStatus
   | EventSessionIdle
+  | EventProviderRatelimit
   | EventQuestionAsked
   | EventQuestionReplied
   | EventQuestionRejected
